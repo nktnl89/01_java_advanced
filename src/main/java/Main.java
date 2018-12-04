@@ -2,23 +2,34 @@ import java.util.LinkedList;
 
 public class Main {
     public static void main(String[] args) {
-        Hotel hotel = new Hotel(new LinkedList<Integer>(), 6, 3, 15);
-        //https://www.geeksforgeeks.org/producer-consumer-solution-using-threads-java/
-        ProducerService producerService = new ProducerService(hotel);
-        ConsumerService consumerService = new ConsumerService(hotel);
+        Hotel hotel = new Hotel(new LinkedList<BookingRequest>(), 15);
 
-        Thread thread1 = new Thread(producerService);
-        Thread thread2 = new Thread(consumerService);
-
-        thread1.start();
-        thread2.start();
-
-        try {
-            thread1.join();
-            thread2.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int i = 0; i < 3; i++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        hotel.produce();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, "producer " + i).start();
         }
+
+        for (int i = 0; i < 6; i++) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        hotel.consume();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, "consumer " + i).start();
+        }
+
 
     }
 }
