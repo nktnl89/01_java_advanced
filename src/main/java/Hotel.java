@@ -65,20 +65,22 @@ public class Hotel {
 
 
     public void produce() throws InterruptedException {
-        int value = 0;
-
-        while (getTotalRequest() > 0) {
-
+        int localTotalRequest = getTotalRequest();
+        while (localTotalRequest > 0) {
             BookingRequest bookingRequest = new BookingRequest(new Random().nextInt(15), LocalDateTime.now());
             synchronized (this) {
-                if (getRequests().size() < 5) {
-                    System.out.println(Thread.currentThread().getName() + " produced-" + value);
+                if (getRequests().size() < 5 && getTotalRequest() > 0) {
+                    System.out.println(Thread.currentThread().getName() + " produced-" + bookingRequest);
                     addRequest(bookingRequest);
-                    notify();
-                } else {
+                    notifyAll();
+                } else if (getRequests().size() >= 5) {
                     System.out.println(Thread.currentThread().getName() + " stack is full");
                     wait();
+                } else {
+                    System.out.println("that's enough for producing today");
+                    return;
                 }
+                localTotalRequest = getTotalRequest();
             }
         }
     }
@@ -92,20 +94,15 @@ public class Hotel {
                     wait();
                 } else {
                     while (!getRequests().isEmpty()) {
-                        //synchronized (this) {
-                        //int val = removeLastRoom();
-                        //System.out.println(Thread.currentThread().getName() + " consumed-" + val);
                         BookingRequest bookingRequest = removeLastRequest();
                         System.out.println(Thread.currentThread().getName() + " consumed-" + bookingRequest);
                         int localTotal = getTotalRequest() - 1;
                         setTotalRequest(localTotal);
                         Thread.sleep(1000);
-                        notify();
+                        notifyAll();
                     }
                 }
             }
-
-
         }
     }
 }
